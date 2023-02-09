@@ -16,3 +16,37 @@ services:
     environment:
       POSTGRES_USER: ${USER:-you}
       POSTGRES_HOST_AUTH_METHOD: trust
+
+  devcontainer:
+    image: sjke/pg_ltree:${PG_LTREE_IMAGE_TAG:-testing}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${PG_LTREE_IMAGE_TAG:-testing}
+      args:
+        DEVELOPER_UID: ${UID:-1000}
+        DEVELOPER_USERNAME: ${USER:-you}
+    volumes:
+      # Mount the current directory as a volume:
+      - type: bind
+        source: .
+        target: /workspaces/pg_ltree
+    # Keep the stdin open, so we can attach to our app container's process
+    # and do things such as byebug, etc:
+    stdin_open: true
+
+    # Enable sending signals (CTRL+C, CTRL+P + CTRL+Q) into the container:
+    tty: true
+
+    # Required for ptrace-based debuggers like C++, Go, and Rust
+    cap_add:
+      - SYS_PTRACE
+      - NET_ADMIN
+    security_opt:
+      - seccomp:unconfined
+
+    depends_on:
+      - postgres
+    
+    environment:
+      EDITOR: code --wait
